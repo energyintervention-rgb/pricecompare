@@ -217,13 +217,13 @@
 
   <nav class="bottom-nav">
     <button class="bnav-btn active" id="bnav-compare" onclick="switchTab('compare')">
-      <span class="bnav-icon">🔍</span>Compare
+      <span class="bnav-icon">🔍</span><span class="bnav-label">Bandingkan</span>
     </button>
     <button class="bnav-btn" id="bnav-list" onclick="switchTab('list')">
-      <span class="bnav-icon">🛒</span>List
+      <span class="bnav-icon">🛒</span><span class="bnav-label">Senarai</span>
     </button>
     <button class="bnav-btn" id="bnav-history" onclick="switchTab('history')">
-      <span class="bnav-icon">📋</span>History
+      <span class="bnav-icon">📋</span><span class="bnav-label">Sejarah</span>
     </button>
   </nav>
 
@@ -366,27 +366,27 @@
           '<button class="remove-btn" onclick="removeItem(' + i + ')">×</button>' +
         '</div>' +
         '<div class="field-row">' +
-          '<div><label class="field-label">Product Name</label>' +
+          '<div><label class="field-label">' + LANG[lang].productName.toUpperCase() + '</label>' +
           '<input type="text" value="' + item.name + '" placeholder="e.g. Milo 1kg" oninput="updateItem(' + i + ',\'name\',this.value)"></div>' +
-          '<div><label class="field-label">' + LANG[lang].productName.toUpperCase() + '</label>' + '<input type="text" value="' + item.name + '" placeholder="e.g. Milo 1kg" oninput="updateItem(' + i + ',\'name\',this.value)"></div><div><label class="field-label">Store</label>' +
+          '<div><label class="field-label">' + LANG[lang].storeLabel.toUpperCase() + '</label>' +
           '<select onchange="updateItem(' + i + ',\'store\',this.value)">' +
-          '<option value="">— store —</option>' +
+          '<option value="">' + LANG[lang].storePlaceholder + '</option>' +
           STORES.map(s => '<option value="' + s + '"' + (item.store===s?' selected':'') + '>' + s + '</option>').join('') +
           '</select></div>' +
         '</div>' +
         '<div class="field-row three">' +
-          '<div><label class="field-label">Price (' + currency + ')</label>' +
+          '<div><label class="field-label">' + LANG[lang].price.toUpperCase() + ' (' + currency + ')</label>' +
           '<input type="number" min="0" step="0.01" value="' + item.price + '" placeholder="0.00" oninput="updateItem(' + i + ',\'price\',this.value)"></div>' +
-          '<div><label class="field-label">Qty</label>' +
+          '<div><label class="field-label">' + LANG[lang].qty.toUpperCase() + '</label>' +
           '<input type="number" min="0" value="' + item.qty + '" placeholder="0" oninput="updateItem(' + i + ',\'qty\',this.value)"></div>' +
-          '<div><label class="field-label">Unit</label>' +
+          '<div><label class="field-label">' + LANG[lang].unit.toUpperCase() + '</label>' +
           '<select onchange="updateItem(' + i + ',\'unit\',this.value)">' +
           UNITS.map(u => '<option value="' + u + '"' + (item.unit===u?' selected':'') + '>' + u + '</option>').join('') +
           '</select></div>' +
         '</div>' +
         '<div class="discount-row">' +
           '<input type="number" min="0" max="100" value="' + item.discount + '" placeholder="0" oninput="updateItem(' + i + ',\'discount\',this.value)">' +
-          '<span class="discount-label">% promo / discount</span>' +
+          '<span class="discount-label">' + LANG[lang].promo + '</span>' +
         '</div>';
       c.appendChild(div);
     });
@@ -569,6 +569,8 @@
       reset: 'Tetapkan Semula',
       bestValue: 'Nilai Terbaik',
       store: '— kedai —',
+      storeLabel: 'Kedai',
+      storePlaceholder: '— kedai —',
       productName: 'Nama Produk',
       price: 'Harga',
       qty: 'Kuantiti',
@@ -605,6 +607,8 @@
       reset: 'Reset',
       bestValue: 'Best Value',
       store: '— store —',
+      storeLabel: 'Store',
+      storePlaceholder: '— store —',
       productName: 'Product Name',
       price: 'Price',
       qty: 'Qty',
@@ -645,9 +649,12 @@
     if (splashSub) splashSub.textContent = t.splashSub;
     // Bottom nav
     const bnavs = document.querySelectorAll('.bnav-btn');
-    if (bnavs[0]) bnavs[0].childNodes[1].textContent = t.compare;
-    if (bnavs[1]) bnavs[1].childNodes[1].textContent = t.list;
-    if (bnavs[2]) bnavs[2].childNodes[1].textContent = t.history;
+    document.querySelectorAll('.bnav-label')[0].textContent = t.compare;
+    document.querySelectorAll('.bnav-label')[1].textContent = t.list;
+    document.querySelectorAll('.bnav-label')[2].textContent = t.history;
+    // Verdict label
+    const verdictLabel = document.querySelector('.verdict-label');
+    if (verdictLabel) verdictLabel.textContent = t.bestValue;
     // Buttons
     const btns = document.querySelectorAll('.btn');
     btns.forEach(b => {
@@ -664,6 +671,9 @@
     if (convLabels[2]) convLabels[2].textContent = t.amount;
     const applyBtn = document.querySelector('.conv-actions .btn');
     if (applyBtn) applyBtn.textContent = t.useCurrency;
+    // List placeholder
+    const listInput = document.getElementById('list-input');
+    if (listInput) listInput.placeholder = t.listPlaceholder;
     // Re-render items to update labels
     renderItems();
   }
