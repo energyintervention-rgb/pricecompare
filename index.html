@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Price Compare Pro</title>
+  <title>Jimat — Best Buy</title>
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="PriceCompare">
-  <meta name="application-name" content="PriceCompare">
+  <meta name="apple-mobile-web-app-title" content="BestBuy">
+  <meta name="application-name" content="BestBuy">
   <meta name="theme-color" content="#f5f0e8">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20192%20192%22%3E%0A%20%20%3Crect%20width%3D%22192%22%20height%3D%22192%22%20rx%3D%2240%22%20fill%3D%22%232d6a4f%22%2F%3E%0A%20%20%3Cg%20transform%3D%22translate%2832%2C32%29%22%20fill%3D%22white%22%3E%0A%20%20%20%20%3C%21--%20cart%20body%20--%3E%0A%20%20%20%20%3Cpath%20d%3D%22M10%2016%20L18%2016%20L28%2072%20L100%2072%20L112%2032%20L24%2032%22%20stroke%3D%22white%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20fill%3D%22none%22%2F%3E%0A%20%20%20%20%3C%21--%20wheels%20--%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2242%22%20cy%3D%2288%22%20r%3D%229%22%20fill%3D%22white%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2288%22%20cy%3D%2288%22%20r%3D%229%22%20fill%3D%22white%22%2F%3E%0A%20%20%20%20%3C%21--%20handle%20bar%20top%20--%3E%0A%20%20%20%20%3Cline%20x1%3D%220%22%20y1%3D%2216%22%20x2%3D%2218%22%20y2%3D%2216%22%20stroke%3D%22white%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E">
+  <link rel="apple-touch-icon" href="icon.png">
   <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Price+Compare+Pro%22%2C%22short_name%22%3A%22PriceCompare%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f0e8%22%2C%22theme_color%22%3A%22%23333333%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%2527http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%2527%2520viewBox%3D%25270%25200%2520192%2520192%2527%253E%253Crect%2520width%3D%2527192%2527%2520height%3D%2527192%2527%2520rx%3D%252740%2527%2520fill%3D%2527%2523333%2527%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono&display=swap');
@@ -30,9 +30,12 @@
     .conv-result-label { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: #2d6a4f; }
     .conv-rate-label { font-size: 0.6rem; color: #aaa; margin-top: 2px; }
     .conv-actions { }
-    .tabs { display: flex; gap: 4px; background: #ebe5d8; border-radius: 10px; padding: 4px; margin-bottom: 16px; }
-    .tab { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 7px; font-size: 0.7rem; cursor: pointer; color: #888; font-family: 'DM Mono', monospace; }
-    .tab.active { background: #fff; color: #333; font-weight: bold; }
+    .tabs { display: none; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1.5px solid #e0d8cc; display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+    .bnav-btn { flex: 1; padding: 10px 4px 8px; border: none; background: none; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.58rem; color: #aaa; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .bnav-btn.active { color: #2d6a4f; }
+    .bnav-icon { font-size: 1.4rem; line-height: 1; }
+    .app { padding-bottom: 80px !important; }
     .section { display: none; }
     .section.active { display: block; }
     .item-card { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
@@ -51,7 +54,7 @@
     .discount-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
     .discount-row input { width: 60px; }
     .discount-label { font-size: 0.65rem; color: #888; }
-    .btn { width: 100%; padding: 10px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: bold; cursor: pointer; margin-bottom: 6px; }
+    .btn { width: 100%; padding: 14px; border-radius: 12px; font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
     .btn-primary { background: #333; color: #f5f0e8; border: none; }
     .btn-primary:hover { background: #555; }
     .btn-outline { background: none; border: 1.5px solid #e0d8cc; color: #333; }
@@ -96,17 +99,34 @@
     .list-add-row button { width: auto; padding: 7px 16px; margin-bottom: 0; }
 
     body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+    .receipt { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 18px; margin-top: 12px; }
+    .receipt-header { text-align: center; border-bottom: 1.5px dashed #e0d8cc; padding-bottom: 12px; margin-bottom: 12px; }
+    .receipt-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; }
+    .receipt-date { font-size: 0.6rem; color: #aaa; margin-top: 2px; }
+    .receipt-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.7rem; border-bottom: 1px solid #f0ece4; }
+    .receipt-row.winner { color: #2d6a4f; font-weight: bold; }
+    .receipt-footer { text-align: center; margin-top: 12px; font-size: 0.6rem; color: #aaa; border-top: 1.5px dashed #e0d8cc; padding-top: 10px; }
+    .share-btn { width: 100%; padding: 12px; border-radius: 12px; background: #25D366; color: #fff; border: none; font-family: 'DM Mono', monospace; font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
   </style>
 </head>
 <body>
+
+<div id="splash" style="position:fixed;inset:0;background:#2d6a4f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.5s;">
+  <div style="font-size:5rem;margin-bottom:16px;">🛒</div>
+  <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:#f5f0e8;">BestBuy</div>
+  <div style="font-size:0.75rem;color:#a8dfc4;margin-top:6px;letter-spacing:0.1em;">SHOP SMART · SAVE MORE</div>
+</div>
+
 <div class="app">
   <div class="header">
     <div>
-      <span class="tag">Supermarket Tool</span>
-      <h1>Price Compare Pro</h1>
-      <p>Best value · store tracker · shopping list · history</p>
+      <span class="tag">Smart Shopper</span>
+      <h1>BestBuy 🛒</h1>
+      <p>Compare prices · save more · shop smart</p>
     </div>
+    <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
     <button class="curr-btn active" id="curr-display" onclick="toggleConverter()">RM ▾</button>
+    </div>
   </div>
 
   <div class="converter-panel" id="converter-panel" style="display:none;">
@@ -161,11 +181,7 @@
     </div>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('compare')">Compare</button>
-    <button class="tab" onclick="switchTab('list')">Shopping List</button>
-    <button class="tab" onclick="switchTab('history')">History</button>
-  </div>
+
 
   <div id="tab-compare" class="section active">
     <div id="items-container"></div>
@@ -194,6 +210,18 @@
     <button class="btn btn-outline" onclick="clearHistory()">Clear History</button>
   </div>
 </div>
+
+  <nav class="bottom-nav">
+    <button class="bnav-btn active" id="bnav-compare" onclick="switchTab('compare')">
+      <span class="bnav-icon">🔍</span>Compare
+    </button>
+    <button class="bnav-btn" id="bnav-list" onclick="switchTab('list')">
+      <span class="bnav-icon">🛒</span>List
+    </button>
+    <button class="bnav-btn" id="bnav-history" onclick="switchTab('history')">
+      <span class="bnav-icon">📋</span>History
+    </button>
+  </nav>
 
 <script>
   const UNITS = ["g","kg","ml","L","oz","lb","count"];
@@ -282,11 +310,14 @@
   }
 
   function switchTab(t) {
-    document.querySelectorAll('.tab').forEach((b,i) => b.classList.toggle('active', ['compare','list','history'][i] === t));
+    ['compare','list','history'].forEach(n => {
+      document.getElementById('bnav-' + n).classList.toggle('active', n === t);
+    });
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('tab-' + t).classList.add('active');
     if (t === 'list') renderList();
     if (t === 'history') renderHistory();
+    window.scrollTo(0, 0);
   }
 
   function toBase(val, unit) {
@@ -405,6 +436,13 @@
     ).join('');
 
     const safeName = best.label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const now = new Date().toLocaleString('en-MY', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const receiptRows = sorted.map((p,idx) =>
+      '<div class="receipt-row' + (idx===0?' winner':'') + '">' +
+      '<span>' + (idx===0?'★ ':'') + p.label + (p.store?' ('+p.store+')':'') + '</span>' +
+      '<span>' + currency + p.ppuVal.toFixed(4) + ' ' + p.ppuLabel + '</span></div>'
+    ).join('');
+
     verdictEl.innerHTML =
       '<div class="verdict">' +
         '<div class="verdict-label">Best Value</div>' +
@@ -488,6 +526,18 @@
 
 
 
+  function shareReceipt() {
+    const rows = document.querySelectorAll('.receipt-row');
+    let text = '🛒 *BestBuy Receipt*\n\n';
+    rows.forEach(r => {
+      const cols = r.querySelectorAll('span');
+      if (cols.length === 2) text += (r.classList.contains('winner') ? '★ BEST: ' : '• ') + cols[0].textContent + ' — ' + cols[1].textContent + '\n';
+    });
+    text += '\n_BestBuy · Shop Smart Save More_';
+    const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.open(url, '_blank');
+  }
+
   function resetAll() {
     items = [];
     shoppingList = [];
@@ -502,6 +552,14 @@
 
   addItem();
   addItem();
+
+  // Splash screen
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      const splash = document.getElementById('splash');
+      if (splash) { splash.style.opacity = '0'; setTimeout(function(){ splash.style.display='none'; }, 500); }
+    }, 1800);
+  });
 
 
 
