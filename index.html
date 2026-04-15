@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Jimat — Best Buy</title>
+  <title>Jimat — Best Buy Malaysia</title>
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BestBuy">
-  <meta name="application-name" content="BestBuy">
+  <meta name="apple-mobile-web-app-title" content="Jimat">
+  <meta name="application-name" content="Jimat">
   <meta name="theme-color" content="#f5f0e8">
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Price+Compare+Pro%22%2C%22short_name%22%3A%22PriceCompare%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f0e8%22%2C%22theme_color%22%3A%22%23333333%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%2527http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%2527%2520viewBox%3D%25270%25200%2520192%2520192%2527%253E%253Crect%2520width%3D%2527192%2527%2520height%3D%2527192%2527%2520rx%3D%252740%2527%2520fill%3D%2527%2523333%2527%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
@@ -22,6 +22,8 @@
     .header p { font-size: 0.68rem; color: #888; margin-top: 2px; }
     .tag { display: inline-block; background: #333; color: #f5f0e8; font-size: 0.58rem; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; }
     .curr-btn { font-size: 0.7rem; padding: 6px 14px; border-radius: 20px; border: 1.5px solid #e0d8cc; background: #333; color: #f5f0e8; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; }
+    .lang-btn { font-size: 0.65rem; padding: 4px 10px; border-radius: 20px; border: 1.5px solid #e0d8cc; background: none; cursor: pointer; color: #888; font-family: 'DM Mono', monospace; font-weight: bold; }
+    .lang-btn.active { background: #2d6a4f; color: #f5f0e8; border-color: #2d6a4f; }
     .converter-panel { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
     .conv-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .conv-amount-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
@@ -113,19 +115,21 @@
 
 <div id="splash" style="position:fixed;inset:0;background:#2d6a4f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.5s;">
   <div style="font-size:5rem;margin-bottom:16px;">🛒</div>
-  <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:#f5f0e8;">BestBuy</div>
-  <div style="font-size:0.75rem;color:#a8dfc4;margin-top:6px;letter-spacing:0.1em;">SHOP SMART · SAVE MORE</div>
+  <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:#f5f0e8;">Jimat</div>
+  <div style="font-size:0.75rem;color:#a8dfc4;margin-top:6px;letter-spacing:0.1em;">BELI BIJAK · JIMAT LEBIH</div>
 </div>
 
 <div class="app">
   <div class="header">
     <div>
-      <span class="tag">Smart Shopper</span>
-      <h1>BestBuy 🛒</h1>
-      <p>Compare prices · save more · shop smart</p>
+      <span class="tag">Jimat — Best Buy</span>
+      <h1>Jimat 🛒</h1>
+      <p>Bandingkan harga · jimat lebih · beli bijak</p>
     </div>
-    <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-    <button class="curr-btn active" id="curr-display" onclick="toggleConverter()">RM ▾</button>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="lang-btn active" id="lang-my" onclick="setLang('my')">MY</button>
+      <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
+      <button class="curr-btn active" id="curr-display" onclick="toggleConverter()">RM ▾</button>
     </div>
   </div>
 
@@ -358,13 +362,13 @@
       div.className = 'item-card';
       div.innerHTML =
         '<div class="card-header">' +
-          '<span class="card-title">Item ' + (i+1) + '</span>' +
+          '<span class="card-title">' + LANG[lang].itemLabel + ' ' + (i+1) + '</span>' +
           '<button class="remove-btn" onclick="removeItem(' + i + ')">×</button>' +
         '</div>' +
         '<div class="field-row">' +
           '<div><label class="field-label">Product Name</label>' +
           '<input type="text" value="' + item.name + '" placeholder="e.g. Milo 1kg" oninput="updateItem(' + i + ',\'name\',this.value)"></div>' +
-          '<div><label class="field-label">Store</label>' +
+          '<div><label class="field-label">' + LANG[lang].productName.toUpperCase() + '</label>' + '<input type="text" value="' + item.name + '" placeholder="e.g. Milo 1kg" oninput="updateItem(' + i + ',\'name\',this.value)"></div><div><label class="field-label">Store</label>' +
           '<select onchange="updateItem(' + i + ',\'store\',this.value)">' +
           '<option value="">— store —</option>' +
           STORES.map(s => '<option value="' + s + '"' + (item.store===s?' selected':'') + '>' + s + '</option>').join('') +
@@ -528,12 +532,12 @@
 
   function shareReceipt() {
     const rows = document.querySelectorAll('.receipt-row');
-    let text = '🛒 *BestBuy Receipt*\n\n';
+    let text = '🛒 *Jimat Receipt*\n\n';
     rows.forEach(r => {
       const cols = r.querySelectorAll('span');
       if (cols.length === 2) text += (r.classList.contains('winner') ? '★ BEST: ' : '• ') + cols[0].textContent + ' — ' + cols[1].textContent + '\n';
     });
-    text += '\n_BestBuy · Shop Smart Save More_';
+    text += '\n_Jimat · Beli Bijak Jimat Lebih_';
     const url = 'https://wa.me/?text=' + encodeURIComponent(text);
     window.open(url, '_blank');
   }
@@ -550,8 +554,125 @@
     window.scrollTo(0, 0);
   }
 
+  // Language strings
+  const LANG = {
+    my: {
+      appName: 'Jimat 🛒',
+      tagline: 'Bandingkan harga · jimat lebih · beli bijak',
+      tag: 'Jimat — Best Buy',
+      splashSub: 'BELI BIJAK · JIMAT LEBIH',
+      compare: 'Bandingkan',
+      list: 'Senarai',
+      history: 'Sejarah',
+      addItem: '+ Tambah Item',
+      comparePrices: 'Bandingkan Harga',
+      reset: 'Tetapkan Semula',
+      bestValue: 'Nilai Terbaik',
+      store: '— kedai —',
+      productName: 'Nama Produk',
+      price: 'Harga',
+      qty: 'Kuantiti',
+      unit: 'Unit',
+      promo: '% promosi / diskaun',
+      addWinner: '+ Tambah ke Senarai',
+      shareWA: 'Kongsi via WhatsApp',
+      receiptTitle: '🛒 Resit Jimat',
+      receiptFooter: 'Jimat · Beli Bijak Jimat Lebih',
+      listPlaceholder: 'Taip nama item...',
+      clearChecked: 'Padam Item Ditanda',
+      clearHistory: 'Padam Sejarah',
+      noList: 'Tiada item lagi.',
+      noHistory: 'Tiada sejarah lagi.',
+      useCurrency: 'Guna sebagai mata wang saya',
+      myCurrency: 'Mata Wang Saya',
+      compareWith: 'Bandingkan Dengan',
+      amount: 'Amaun',
+      savePct: 'Jimat',
+      saveAmt: 'Jimat',
+      vsPriciest: 'vs paling mahal',
+      itemLabel: 'Item',
+    },
+    en: {
+      appName: 'BestBuy 🛒',
+      tagline: 'Compare prices · save more · shop smart',
+      tag: 'Smart Shopper',
+      splashSub: 'SHOP SMART · SAVE MORE',
+      compare: 'Compare',
+      list: 'List',
+      history: 'History',
+      addItem: '+ Add Item',
+      comparePrices: 'Compare Prices',
+      reset: 'Reset',
+      bestValue: 'Best Value',
+      store: '— store —',
+      productName: 'Product Name',
+      price: 'Price',
+      qty: 'Qty',
+      unit: 'Unit',
+      promo: '% promo / discount',
+      addWinner: '+ Add to Shopping List',
+      shareWA: 'Share via WhatsApp',
+      receiptTitle: '🛒 BestBuy Receipt',
+      receiptFooter: 'BestBuy · Shop Smart Save More',
+      listPlaceholder: 'Type item name...',
+      clearChecked: 'Clear Checked Items',
+      clearHistory: 'Clear History',
+      noList: 'No items yet.',
+      noHistory: 'No history yet.',
+      useCurrency: 'Use as my price currency',
+      myCurrency: 'My Currency',
+      compareWith: 'Compare With',
+      amount: 'Amount',
+      savePct: 'Save',
+      saveAmt: 'Save',
+      vsPriciest: 'vs priciest',
+      itemLabel: 'Item',
+    }
+  };
+  let lang = 'my';
+
+  function setLang(l) {
+    lang = l;
+    document.getElementById('lang-my').classList.toggle('active', l === 'my');
+    document.getElementById('lang-en').classList.toggle('active', l === 'en');
+    const t = LANG[l];
+    // Header
+    document.querySelector('h1').textContent = t.appName;
+    document.querySelector('.tag').textContent = t.tag;
+    document.querySelector('.header p').textContent = t.tagline;
+    // Splash
+    const splashSub = document.querySelector('#splash div:last-child');
+    if (splashSub) splashSub.textContent = t.splashSub;
+    // Bottom nav
+    const bnavs = document.querySelectorAll('.bnav-btn');
+    if (bnavs[0]) bnavs[0].childNodes[1].textContent = t.compare;
+    if (bnavs[1]) bnavs[1].childNodes[1].textContent = t.list;
+    if (bnavs[2]) bnavs[2].childNodes[1].textContent = t.history;
+    // Buttons
+    const btns = document.querySelectorAll('.btn');
+    btns.forEach(b => {
+      if (b.getAttribute('onclick') === 'addItem()') b.textContent = t.addItem;
+      if (b.getAttribute('onclick') === 'comparePrices()') b.textContent = t.comparePrices;
+      if (b.getAttribute('onclick') === 'resetAll()') b.textContent = t.reset;
+      if (b.getAttribute('onclick') === 'clearChecked()') b.textContent = t.clearChecked;
+      if (b.getAttribute('onclick') === 'clearHistory()') b.textContent = t.clearHistory;
+    });
+    // Conv labels
+    const convLabels = document.querySelectorAll('.conv-col .field-label');
+    if (convLabels[0]) convLabels[0].textContent = t.myCurrency;
+    if (convLabels[1]) convLabels[1].textContent = t.compareWith;
+    if (convLabels[2]) convLabels[2].textContent = t.amount;
+    const applyBtn = document.querySelector('.conv-actions .btn');
+    if (applyBtn) applyBtn.textContent = t.useCurrency;
+    // Re-render items to update labels
+    renderItems();
+  }
+
   addItem();
   addItem();
+
+  // Set default language to Malay on load
+  setLang('my');
 
   // Splash screen
   window.addEventListener('load', function() {
