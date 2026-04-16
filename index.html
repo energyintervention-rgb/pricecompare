@@ -611,7 +611,7 @@
     const reader = new FileReader();
     reader.onload = function(e) {
       // Compress to max 800px wide, 60% quality — reduces ~2MB to ~80KB
-      compressImage(e.target.result, 800, 0.6, function(compressed) {
+      compressImage(e.target.result, 600, 0.4, function(compressed) {
         currentPhotoData = compressed;
         document.getElementById('survey-preview').src = compressed;
         document.getElementById('survey-preview').style.display = 'block';
