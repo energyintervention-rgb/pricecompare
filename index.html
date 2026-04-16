@@ -101,6 +101,19 @@
     .list-add-row button { width: auto; padding: 7px 16px; margin-bottom: 0; }
 
     body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+    .survey-capture-box { background: var(--color-bg, #fff); border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .survey-form { margin-top: 12px; }
+    .survey-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+    .survey-card { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; overflow: hidden; position: relative; }
+    .survey-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .survey-card-info { padding: 8px 10px; }
+    .survey-card-store { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: bold; color: #2d6a4f; }
+    .survey-card-note { font-size: 0.65rem; color: #555; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .survey-card-date { font-size: 0.58rem; color: #aaa; margin-top: 2px; }
+    .survey-card-actions { display: flex; gap: 6px; padding: 6px 10px 10px; }
+    .survey-action-btn { flex: 1; padding: 5px; border-radius: 6px; font-size: 0.62rem; cursor: pointer; font-family: 'DM Mono', monospace; border: 1.5px solid #e0d8cc; background: none; }
+    .survey-action-btn.green { background: #25D366; color: #fff; border-color: #25D366; }
+    .survey-empty { text-align: center; padding: 32px; color: #aaa; font-size: 0.72rem; line-height: 1.8; }
     .receipt { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 18px; margin-top: 12px; }
     .receipt-header { text-align: center; border-bottom: 1.5px dashed #e0d8cc; padding-bottom: 12px; margin-bottom: 12px; }
     .receipt-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; }
@@ -213,6 +226,35 @@
     <div id="history-container"></div>
     <button class="btn btn-outline" onclick="clearHistory()">Clear History</button>
   </div>
+
+  <div id="tab-survey" class="section">
+    <div class="survey-capture-box">
+      <input type="file" accept="image/*" capture="environment" id="survey-cam-input" style="display:none;" onchange="handleSurveyPhoto(event)">
+      <button class="btn btn-primary" onclick="document.getElementById('survey-cam-input').click()">📷 Take Price Tag Photo</button>
+      <div class="survey-form" id="survey-form" style="display:none;">
+        <div class="field-row">
+          <div>
+            <label class="field-label">Store</label>
+            <select id="survey-store">
+              <option value="">— store —</option>
+              <option>Giant</option><option>Tesco</option><option>Mydin</option>
+              <option>Aeon</option><option>Lotus</option><option>Cold Storage</option>
+              <option>99 Speedmart</option><option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Note</label>
+            <input type="text" id="survey-note" placeholder="e.g. Milo 1kg RM8.90">
+          </div>
+        </div>
+        <img id="survey-preview" style="width:100%;border-radius:10px;margin:10px 0;display:none;">
+        <button class="btn btn-primary" onclick="saveSurveyPhoto()">💾 Save Photo</button>
+        <button class="btn btn-outline" onclick="cancelSurvey()">Cancel</button>
+      </div>
+    </div>
+    <div id="survey-gallery"></div>
+    <button class="btn btn-outline" onclick="clearSurvey()" style="margin-top:8px;">🗑️ Clear All Photos</button>
+  </div>
 </div>
 
   <nav class="bottom-nav">
@@ -225,11 +267,14 @@
     <button class="bnav-btn" id="bnav-history" onclick="switchTab('history')">
       <span class="bnav-icon">📋</span><span class="bnav-label">Sejarah</span>
     </button>
+    <button class="bnav-btn" id="bnav-survey" onclick="switchTab('survey')">
+      <span class="bnav-icon">📷</span><span class="bnav-label">Survei</span>
+    </button>
   </nav>
 
 <script>
   const UNITS = ["g","kg","ml","L","oz","lb","count"];
-  const STORES = ["Giant","Tesco","Mydin","Aeon","Lotus's","Cold Storage","99 Speedmart","Other"];
+  const STORES = ["Giant","Tesco","Mydin","Aeon","Lotus","Cold Storage","99 Speedmart","Other"];
   let currency = 'RM';
   let items = [];
   let shoppingList = [];
@@ -314,13 +359,15 @@
   }
 
   function switchTab(t) {
-    ['compare','list','history'].forEach(n => {
-      document.getElementById('bnav-' + n).classList.toggle('active', n === t);
+    ['compare','list','history','survey'].forEach(n => {
+      const el = document.getElementById('bnav-' + n);
+      if (el) el.classList.toggle('active', n === t);
     });
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('tab-' + t).classList.add('active');
     if (t === 'list') renderList();
     if (t === 'history') renderHistory();
+    if (t === 'survey') loadSurveyGallery();
     window.scrollTo(0, 0);
   }
 
@@ -542,6 +589,123 @@
     window.open(url, '_blank');
   }
 
+  // ============ SURVEY FUNCTIONS ============
+  let currentPhotoData = null;
+
+  function handleSurveyPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      currentPhotoData = e.target.result;
+      document.getElementById('survey-preview').src = currentPhotoData;
+      document.getElementById('survey-preview').style.display = 'block';
+      document.getElementById('survey-form').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  }
+
+  function saveSurveyPhoto() {
+    if (!currentPhotoData) return;
+    const store = document.getElementById('survey-store').value || 'Unknown';
+    const note = document.getElementById('survey-note').value || '';
+    const date = new Date().toLocaleString('en-MY', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    const id = Date.now();
+    const entry = { id, photo: currentPhotoData, store, note, date };
+
+    // Save to IndexedDB
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onupgradeneeded = function(e) {
+      e.target.result.createObjectStore('photos', { keyPath: 'id' });
+    };
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readwrite');
+      tx.objectStore('photos').add(entry);
+      tx.oncomplete = function() {
+        cancelSurvey();
+        loadSurveyGallery();
+      };
+    };
+  }
+
+  function cancelSurvey() {
+    currentPhotoData = null;
+    document.getElementById('survey-form').style.display = 'none';
+    document.getElementById('survey-preview').style.display = 'none';
+    document.getElementById('survey-preview').src = '';
+    document.getElementById('survey-note').value = '';
+    document.getElementById('survey-store').value = '';
+  }
+
+  function loadSurveyGallery() {
+    const gallery = document.getElementById('survey-gallery');
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onupgradeneeded = function(e) {
+      e.target.result.createObjectStore('photos', { keyPath: 'id' });
+    };
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readonly');
+      const store = tx.objectStore('photos');
+      const all = store.getAll();
+      all.onsuccess = function() {
+        const photos = all.result.reverse();
+        if (!photos.length) {
+          gallery.innerHTML = '<div class="survey-empty">No photos yet.<br>Tap "Take Price Tag Photo" to start.</div>';
+          return;
+        }
+      };
+    };
+  }
+
+  function viewPhoto(imgEl) {
+    // Simple lightbox - show full size image
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.onclick = function(){ document.body.removeChild(overlay); };
+    const img = document.createElement('img');
+    img.src = imgEl.src;
+    img.style.cssText = 'max-width:95%;max-height:90vh;border-radius:8px;';
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+  }
+
+  function deletePhoto(id) {
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readwrite');
+      tx.objectStore('photos').delete(id);
+      tx.oncomplete = function() { loadSurveyGallery(); };
+    };
+  }
+
+  function sharePhoto(id) {
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readonly');
+      tx.objectStore('photos').get(id).onsuccess = function(ev) {
+        const p = ev.target.result;
+        if (!p) return;
+        const text = '🛒 *Jimat Price Survey*\n\n🏪 Store: ' + p.store + '\n📝 Note: ' + (p.note||'—') + '\n📅 ' + p.date + '\n\n_Jimat · Beli Bijak Jimat Lebih_';
+        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+      };
+    };
+  }
+
+  function clearSurvey() {
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readwrite');
+      tx.objectStore('photos').clear();
+      tx.oncomplete = function() { loadSurveyGallery(); };
+    };
+  }
+
   function resetAll() {
     items = [];
     shoppingList = [];
@@ -593,6 +757,9 @@
       saveAmt: 'Jimat',
       vsPriciest: 'vs paling mahal',
       itemLabel: 'Item',
+      surveyTab: 'Survei',
+      surveyBtn: '📷 Ambil Foto Tag Harga',
+      surveySave: '💾 Simpan Foto',
     },
     en: {
       appName: 'BestBuy 🛒',
@@ -631,6 +798,9 @@
       saveAmt: 'Save',
       vsPriciest: 'vs priciest',
       itemLabel: 'Item',
+      surveyTab: 'Survey',
+      surveyBtn: '📷 Take Price Tag Photo',
+      surveySave: '💾 Save Photo',
     }
   };
   let lang = 'my';
@@ -652,6 +822,7 @@
     document.querySelectorAll('.bnav-label')[0].textContent = t.compare;
     document.querySelectorAll('.bnav-label')[1].textContent = t.list;
     document.querySelectorAll('.bnav-label')[2].textContent = t.history;
+    if (document.querySelectorAll('.bnav-label')[3]) document.querySelectorAll('.bnav-label')[3].textContent = t.surveyTab || 'Survey';
     // Verdict label
     const verdictLabel = document.querySelector('.verdict-label');
     if (verdictLabel) verdictLabel.textContent = t.bestValue;
@@ -694,19 +865,92 @@
 
 
 
-  // Register inline service worker for offline support
+
+  // ============ PROPER SERVICE WORKER ============
   if ('serviceWorker' in navigator) {
+    const CACHE = 'jimat-v1';
     const swCode = `
-      self.addEventListener('install', e => self.skipWaiting());
-      self.addEventListener('activate', e => clients.claim());
+      const CACHE_NAME = 'jimat-v1';
+      const ASSETS = [
+        self.location.pathname.replace('/sw.js','') + '/',
+        'https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono&display=swap'
+      ];
+
+      self.addEventListener('install', e => {
+        e.waitUntil(
+          caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll(ASSETS).catch(() => {});
+          }).then(() => self.skipWaiting())
+        );
+      });
+
+      self.addEventListener('activate', e => {
+        e.waitUntil(
+          caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+          ).then(() => clients.claim())
+        );
+      });
+
       self.addEventListener('fetch', e => {
-        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+        if (e.request.method !== 'GET') return;
+        const url = new URL(e.request.url);
+
+        // Network first for currency API
+        if (url.hostname === 'api.frankfurter.app') {
+          e.respondWith(
+            fetch(e.request)
+              .then(res => {
+                const clone = res.clone();
+                caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+                return res;
+              })
+              .catch(() => caches.match(e.request))
+          );
+          return;
+        }
+
+        // Cache first for everything else
+        e.respondWith(
+          caches.match(e.request).then(cached => {
+            if (cached) return cached;
+            return fetch(e.request).then(res => {
+              if (!res || res.status !== 200 || res.type === 'opaque') return res;
+              const clone = res.clone();
+              caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+              return res;
+            }).catch(() => caches.match('/'));
+          })
+        );
       });
     `;
-    const blob = new Blob([swCode], {type: 'application/javascript'});
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl, {scope: '/'}).catch(()=>{});
+
+    // Only register SW when served from http/https (not blob/file)
+    const proto = window.location.protocol;
+    if (proto === 'http:' || proto === 'https:') {
+      const blob = new Blob([swCode], {type: 'application/javascript'});
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).then(reg => {
+        if (reg.installing) {
+          caches.open(CACHE).then(cache => {
+            cache.add(window.location.href);
+          });
+        }
+        console.log('Jimat SW registered — offline mode active');
+      }).catch(err => console.log('SW note:', err.message));
+    }
+
+    // Also cache all external fonts and resources on load
+    window.addEventListener('load', function() {
+      caches.open(CACHE).then(function(cache) {
+        // Cache the page itself
+        cache.add(window.location.href).catch(() => {});
+        // Cache fonts
+        cache.add('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono&display=swap').catch(() => {});
+      });
+    });
   }
+
 </script>
 </body>
 </html>
