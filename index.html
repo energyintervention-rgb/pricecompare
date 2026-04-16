@@ -762,10 +762,46 @@
       tx.objectStore('photos').get(id).onsuccess = function(ev) {
         const p = ev.target.result;
         if (!p) return;
-        const text = '🛒 *Jimat Price Survey*\n\n🏪 Store: ' + p.store + '\n📝 Note: ' + (p.note||'—') + '\n📅 ' + p.date + '\n\n_Jimat · Beli Bijak Jimat Lebih_';
-        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+
+        // Try Web Share API first (shares photo + text natively on mobile)
+        if (navigator.share && navigator.canShare) {
+          fetch(p.photo)
+            .then(r => r.blob())
+            .catch(() => {
+              // photo is base64 data URL - convert to blob
+              const arr = p.photo.split(',');
+              const mime = arr[0].match(/:(.*?);/)[1];
+              const bstr = atob(arr[1]);
+              let n = bstr.length;
+              const u8arr = new Uint8Array(n);
+              while(n--) u8arr[n] = bstr.charCodeAt(n);
+              return new Blob([u8arr], {type: mime});
+            })
+            .then(blob => {
+              const file = new File([blob], 'price-tag.jpg', {type: 'image/jpeg'});
+              const shareData = {
+                title: 'Jimat Price Survey',
+                text: '\uD83D\uDED2 *Jimat Price Survey*\n\n\uD83C\uDFEA Store: ' + (p.store||'\u2014') + '\n\uD83D\uDCDD Note: ' + (p.note||'\u2014') + '\n\uD83D\uDCC5 ' + p.date + '\n\n\uD83D\uDD17 Try Jimat: https://energyintervention-rgb.github.io/pricecompare\n_Jimat \u00B7 Beli Bijak Jimat Lebih_',
+                files: [file]
+              };
+              if (navigator.canShare(shareData)) {
+                navigator.share(shareData).catch(() => fallbackShare(p));
+              } else {
+                fallbackShare(p);
+              }
+            })
+            .catch(() => fallbackShare(p));
+        } else {
+          fallbackShare(p);
+        }
       };
     };
+  }
+
+  function fallbackShare(p) {
+    // Fallback: WhatsApp text only with app link
+    const text = '\uD83D\uDED2 *Jimat Price Survey*\n\n\uD83C\uDFEA Store: ' + (p.store||'\u2014') + '\n\uD83D\uDCDD Note: ' + (p.note||'\u2014') + '\n\uD83D\uDCC5 ' + p.date + '\n\n\uD83D\uDD17 Try Jimat: https://energyintervention-rgb.github.io/pricecompare\n\n_Jimat \u00B7 Beli Bijak Jimat Lebih_';
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
   }
 
   function clearSurvey() {
