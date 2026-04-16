@@ -592,15 +592,35 @@
   // ============ SURVEY FUNCTIONS ============
   let currentPhotoData = null;
 
+  function compressImage(dataUrl, maxWidth, quality, callback) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  }
+
   function handleSurveyPhoto(event) {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
-      currentPhotoData = e.target.result;
-      document.getElementById('survey-preview').src = currentPhotoData;
-      document.getElementById('survey-preview').style.display = 'block';
-      document.getElementById('survey-form').style.display = 'block';
+      // Compress to max 800px wide, 60% quality — reduces ~2MB to ~80KB
+      compressImage(e.target.result, 800, 0.6, function(compressed) {
+        currentPhotoData = compressed;
+        document.getElementById('survey-preview').src = compressed;
+        document.getElementById('survey-preview').style.display = 'block';
+        document.getElementById('survey-form').style.display = 'block';
+        // Show file size saved
+        const origKB = Math.round(e.target.result.length * 0.75 / 1024);
+        const newKB = Math.round(compressed.length * 0.75 / 1024);
+        console.log('Photo compressed: ' + origKB + 'KB -> ' + newKB + 'KB');
+      });
     };
     reader.readAsDataURL(file);
     event.target.value = '';
@@ -608,6 +628,9 @@
 
   function saveSurveyPhoto() {
     if (!currentPhotoData) return;
+    // Show saving indicator
+    const saveBtn = document.querySelector('#tab-survey .btn-primary[onclick="saveSurveyPhoto()"]');
+    if (saveBtn) { saveBtn.textContent = '⏳ Saving...'; saveBtn.disabled = true; }
     const store = document.getElementById('survey-store').value || 'Unknown';
     const note = document.getElementById('survey-note').value || '';
     const date = new Date().toLocaleString('en-MY', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
@@ -627,9 +650,6 @@
       tx.oncomplete = function() {
         cancelSurvey();
         loadSurveyGallery();
-        // Show success feedback
-        const btn = document.querySelector('#tab-survey .btn-primary');
-        if (btn) { const orig = btn.textContent; btn.textContent = '✅ Saved!'; setTimeout(function(){ btn.textContent = orig; }, 2000); }
       };
     };
     request.onerror = function(e) { alert('DB open error: ' + e.target.error); };
