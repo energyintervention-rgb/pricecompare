@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Jimat — Best Buy Malaysia</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Jimat">
+  <meta name="application-name" content="Jimat">
+  <meta name="theme-color" content="#f5f0e8">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Price+Compare+Pro%22%2C%22short_name%22%3A%22PriceCompare%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f0e8%22%2C%22theme_color%22%3A%22%23333333%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%2527http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%2527%2520viewBox%3D%25270%25200%2520192%2520192%2527%253E%253Crect%2520width%3D%2527192%2527%2520height%3D%2527192%2527%2520rx%3D%252740%2527%2520fill%3D%2527%2523333%2527%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Mono', monospace; background: #f5f0e8; min-height: 100vh; }
+    .app { max-width: 560px; margin: 0 auto; padding: 20px 16px 60px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .header h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; }
+    .header p { font-size: 0.68rem; color: #888; margin-top: 2px; }
+    .tag { display: inline-block; background: #333; color: #f5f0e8; font-size: 0.58rem; padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; }
+    .curr-btn { font-size: 0.7rem; padding: 6px 14px; border-radius: 20px; border: 1.5px solid #e0d8cc; background: #333; color: #f5f0e8; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; }
+    .lang-btn { font-size: 0.65rem; padding: 4px 10px; border-radius: 20px; border: 1.5px solid #e0d8cc; background: none; cursor: pointer; color: #888; font-family: 'DM Mono', monospace; font-weight: bold; }
+    .lang-btn.active { background: #2d6a4f; color: #f5f0e8; border-color: #2d6a4f; }
+    .converter-panel { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .conv-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .conv-amount-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .conv-col { display: flex; flex-direction: column; justify-content: flex-end; }
+    .conv-result-box { background: #f8f5f0; border-radius: 8px; padding: 8px 10px; justify-content: center; }
+    .conv-result-label { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: #2d6a4f; }
+    .conv-rate-label { font-size: 0.6rem; color: #aaa; margin-top: 2px; }
+    .conv-actions { }
+    .tabs { display: none; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1.5px solid #e0d8cc; display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+    .bnav-btn { flex: 1; padding: 10px 4px 8px; border: none; background: none; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.58rem; color: #aaa; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .bnav-btn.active { color: #2d6a4f; }
+    .bnav-icon { font-size: 1.4rem; line-height: 1; }
+    .app { padding-bottom: 80px !important; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .item-card { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 0.7rem; font-weight: bold; }
+    .remove-btn { background: none; border: none; color: #bbb; cursor: pointer; font-size: 1.2rem; padding: 0 4px; }
+    .remove-btn:hover { color: #e07070; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .field-row.three { grid-template-columns: 2fr 1fr 1fr; }
+    .field-label { font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; display: block; color: #888; }
+    input[type="number"], input[type="text"], select {
+      width: 100%; background: #f8f5f0; border: 1.5px solid #e0d8cc; border-radius: 6px;
+      padding: 6px 8px; font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #333;
+    }
+    input:focus, select:focus { border-color: #333; outline: none; }
+    .discount-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .discount-row input { width: 60px; }
+    .discount-label { font-size: 0.65rem; color: #888; }
+    .btn { width: 100%; padding: 14px; border-radius: 12px; font-family: 'DM Mono', monospace; font-size: 0.82rem; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
+    .btn-primary { background: #333; color: #f5f0e8; border: none; }
+    .btn-primary:hover { background: #555; }
+    .btn-outline { background: none; border: 1.5px solid #e0d8cc; color: #333; }
+    .btn-outline:hover { border-color: #333; }
+    .verdict { background: #2d6a4f; border-radius: 12px; padding: 16px; margin-top: 12px; color: #f5f0e8; }
+    .verdict-label { font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.8; }
+    .verdict-winner { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 800; }
+    .verdict-ppu { font-size: 0.7rem; opacity: 0.8; margin-top: 2px; }
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .pill { font-size: 0.62rem; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.18); }
+    .ranked-list { margin-top: 12px; }
+    .rank-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; background: #fff; border: 1.5px solid #e0d8cc; }
+    .rank-row.best { background: #f0faf4; border-color: #2d6a4f; }
+    .rank-num { font-size: 0.65rem; font-weight: bold; width: 20px; color: #aaa; }
+    .rank-row.best .rank-num { color: #2d6a4f; }
+    .rank-name { flex: 1; font-size: 0.72rem; }
+    .rank-store { font-size: 0.6rem; color: #aaa; }
+    .rank-ppu { font-size: 0.65rem; color: #555; text-align: right; }
+    .list-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; background: #fff; border: 1.5px solid #e0d8cc; }
+    .list-item.checked { opacity: 0.5; }
+    .list-item-name { flex: 1; font-size: 0.72rem; }
+    .list-item.checked .list-item-name { text-decoration: line-through; }
+    .list-item-store { font-size: 0.6rem; color: #aaa; }
+    .list-item-price { font-size: 0.72rem; font-weight: bold; }
+    .check-btn { background: none; border: 1.5px solid #e0d8cc; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .check-btn.done { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+    .total-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; border: 1.5px solid #e0d8cc; border-radius: 8px; margin-top: 8px; }
+    .total-label { font-size: 0.65rem; color: #888; }
+    .total-val { font-size: 0.9rem; font-weight: bold; }
+    .history-card { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+    .history-date { font-size: 0.6rem; color: #aaa; margin-bottom: 4px; }
+    .history-winner { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: bold; }
+    .history-ppu { font-size: 0.65rem; color: #555; }
+    .history-items { font-size: 0.6rem; color: #aaa; margin-top: 4px; }
+    .win-badge { display: inline-block; font-size: 0.55rem; padding: 2px 8px; border-radius: 20px; background: #e8f5ee; color: #2d6a4f; margin-left: 6px; }
+    .empty-state { text-align: center; padding: 32px; color: #aaa; font-size: 0.72rem; line-height: 1.8; }
+    .add-winner-btn { display: inline-block; font-size: 0.65rem; padding: 5px 12px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.4); background: none; color: #f5f0e8; cursor: pointer; font-family: 'DM Mono', monospace; margin-top: 10px; }
+    .add-winner-btn:hover { background: rgba(255,255,255,0.15); }
+    .warning-box { background: #fff7ed; border: 1.5px solid #f5c084; border-radius: 10px; padding: 12px 14px; color: #8a5a00; font-size: 0.7rem; margin-top: 10px; }
+    .list-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .list-add-row input { flex: 1; }
+    .list-add-row button { width: auto; padding: 7px 16px; margin-bottom: 0; }
+
+    body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+    .survey-capture-box { background: var(--color-bg, #fff); border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .survey-form { margin-top: 12px; }
+    .survey-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+    .survey-card { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; overflow: hidden; position: relative; }
+    .survey-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .survey-card-info { padding: 8px 10px; }
+    .survey-card-store { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: bold; color: #2d6a4f; }
+    .survey-card-note { font-size: 0.65rem; color: #555; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .survey-card-date { font-size: 0.58rem; color: #aaa; margin-top: 2px; }
+    .survey-card-actions { display: flex; gap: 6px; padding: 6px 10px 10px; }
+    .survey-action-btn { flex: 1; padding: 5px; border-radius: 6px; font-size: 0.62rem; cursor: pointer; font-family: 'DM Mono', monospace; border: 1.5px solid #e0d8cc; background: none; }
+    .survey-action-btn.green { background: #25D366; color: #fff; border-color: #25D366; }
+    .survey-empty { text-align: center; padding: 32px; color: #aaa; font-size: 0.72rem; line-height: 1.8; }
+    .receipt { background: #fff; border: 1.5px solid #e0d8cc; border-radius: 12px; padding: 18px; margin-top: 12px; }
+    .receipt-header { text-align: center; border-bottom: 1.5px dashed #e0d8cc; padding-bottom: 12px; margin-bottom: 12px; }
+    .receipt-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; }
+    .receipt-date { font-size: 0.6rem; color: #aaa; margin-top: 2px; }
+    .receipt-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.7rem; border-bottom: 1px solid #f0ece4; }
+    .receipt-row.winner { color: #2d6a4f; font-weight: bold; }
+    .receipt-footer { text-align: center; margin-top: 12px; font-size: 0.6rem; color: #aaa; border-top: 1.5px dashed #e0d8cc; padding-top: 10px; }
+    .share-btn { width: 100%; padding: 12px; border-radius: 12px; background: #25D366; color: #fff; border: none; font-family: 'DM Mono', monospace; font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<div id="splash" style="position:fixed;inset:0;background:#2d6a4f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.5s;">
+  <div style="font-size:5rem;margin-bottom:16px;">🛒</div>
+  <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:#f5f0e8;">Jimat</div>
+  <div style="font-size:0.75rem;color:#a8dfc4;margin-top:6px;letter-spacing:0.1em;">BELI BIJAK · JIMAT LEBIH</div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <div>
+      <span class="tag">Jimat — Best Buy</span>
+      <h1>Jimat 🛒</h1>
+      <p>Bandingkan harga · jimat lebih · beli bijak</p>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="lang-btn active" id="lang-my" onclick="setLang('my')">MY</button>
+      <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
+      <button class="curr-btn active" id="curr-display" onclick="toggleConverter()">RM ▾</button>
+    </div>
+  </div>
+
+  <div class="converter-panel" id="converter-panel" style="display:none;">
+    <div class="conv-row">
+      <div class="conv-col">
+        <label class="field-label">My currency</label>
+        <select id="conv-from" onchange="updateConverter()">
+          <option value="MYR">MYR — Malaysian Ringgit</option>
+          <option value="USD">USD — US Dollar</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="SGD">SGD — Singapore Dollar</option>
+          <option value="AUD">AUD — Australian Dollar</option>
+          <option value="JPY">JPY — Japanese Yen</option>
+          <option value="CNY">CNY — Chinese Yuan</option>
+          <option value="THB">THB — Thai Baht</option>
+          <option value="IDR">IDR — Indonesian Rupiah</option>
+          <option value="SAR">SAR — Saudi Riyal</option>
+          <option value="AED">AED — UAE Dirham</option>
+        </select>
+      </div>
+      <div class="conv-col">
+        <label class="field-label">Compare with</label>
+        <select id="conv-to" onchange="updateConverter()">
+          <option value="USD">USD — US Dollar</option>
+          <option value="MYR">MYR — Malaysian Ringgit</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="SGD">SGD — Singapore Dollar</option>
+          <option value="AUD">AUD — Australian Dollar</option>
+          <option value="JPY">JPY — Japanese Yen</option>
+          <option value="CNY">CNY — Chinese Yuan</option>
+          <option value="THB">THB — Thai Baht</option>
+          <option value="IDR">IDR — Indonesian Rupiah</option>
+          <option value="SAR">SAR — Saudi Riyal</option>
+          <option value="AED">AED — UAE Dirham</option>
+        </select>
+      </div>
+    </div>
+    <div class="conv-amount-row">
+      <div class="conv-col">
+        <label class="field-label">Amount</label>
+        <input type="number" id="conv-amount" value="1" min="0" step="any" oninput="updateConverter()">
+      </div>
+      <div class="conv-col conv-result-box">
+        <div class="conv-result-label" id="conv-result-label">= —</div>
+        <div class="conv-rate-label" id="conv-rate-label">Fetching rate...</div>
+      </div>
+    </div>
+    <div class="conv-actions">
+      <button class="btn btn-primary" style="margin-bottom:0;" onclick="applyFromCurrency()">Use as my price currency</button>
+    </div>
+  </div>
+
+
+
+  <div id="tab-compare" class="section active">
+    <div id="items-container"></div>
+    <button class="btn btn-outline" onclick="addItem()">+ Add Item</button>
+    <button class="btn btn-primary" onclick="comparePrices()">Compare Prices</button>
+    <button class="btn btn-outline" style="color:#c0392b; border-color:#e8c5c0;" onclick="resetAll()">Reset</button>
+
+    <div id="verdict"></div>
+  </div>
+
+  <div id="tab-list" class="section">
+    <div class="list-add-row">
+      <input type="text" id="list-input" placeholder="Type item name to add..." onkeydown="if(event.key==='Enter')addToListManual()">
+      <button class="btn btn-primary" onclick="addToListManual()">Add</button>
+    </div>
+    <div id="list-container"></div>
+    <div class="total-bar" id="list-total" style="display:none;">
+      <span class="total-label">Estimated total</span>
+      <span class="total-val" id="list-total-val">—</span>
+    </div>
+    <button class="btn btn-outline" onclick="clearChecked()" style="margin-top:8px;">Clear Checked Items</button>
+  </div>
+
+  <div id="tab-history" class="section">
+    <div id="history-container"></div>
+    <button class="btn btn-outline" onclick="clearHistory()">Clear History</button>
+  </div>
+
+  <div id="tab-survey" class="section">
+    <div class="survey-capture-box">
+      <input type="file" accept="image/*" capture="environment" id="survey-cam-input" style="display:none;" onchange="handleSurveyPhoto(event)">
+      <button class="btn btn-primary" onclick="document.getElementById('survey-cam-input').click()">📷 Take Price Tag Photo</button>
+      <div class="survey-form" id="survey-form" style="display:none;">
+        <div class="field-row">
+          <div>
+            <label class="field-label">Store</label>
+            <select id="survey-store">
+              <option value="">— store —</option>
+              <option>Giant</option><option>Tesco</option><option>Mydin</option>
+              <option>Aeon</option><option>Lotus</option><option>Cold Storage</option>
+              <option>99 Speedmart</option><option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Note</label>
+            <input type="text" id="survey-note" placeholder="e.g. Milo 1kg RM8.90">
+          </div>
+        </div>
+        <img id="survey-preview" style="width:100%;border-radius:10px;margin:10px 0;display:none;">
+        <button class="btn btn-primary" onclick="saveSurveyPhoto()">💾 Save Photo</button>
+        <button class="btn btn-outline" onclick="cancelSurvey()">Cancel</button>
+      </div>
+    </div>
+    <div id="survey-gallery"></div>
+    <button class="btn btn-outline" onclick="clearSurvey()" style="margin-top:8px;">🗑️ Clear All Photos</button>
+  </div>
+</div>
+
+  <nav class="bottom-nav">
+    <button class="bnav-btn active" id="bnav-compare" onclick="switchTab('compare')">
+      <span class="bnav-icon">🔍</span><span class="bnav-label">Bandingkan</span>
+    </button>
+    <button class="bnav-btn" id="bnav-list" onclick="switchTab('list')">
+      <span class="bnav-icon">🛒</span><span class="bnav-label">Senarai</span>
+    </button>
+    <button class="bnav-btn" id="bnav-history" onclick="switchTab('history')">
+      <span class="bnav-icon">📋</span><span class="bnav-label">Sejarah</span>
+    </button>
+    <button class="bnav-btn" id="bnav-survey" onclick="switchTab('survey')">
+      <span class="bnav-icon">📷</span><span class="bnav-label">Survei</span>
+    </button>
+  </nav>
+
+<script>
+  const UNITS = ["g","kg","ml","L","oz","lb","count"];
+  const STORES = ["Giant","Tesco","Mydin","Aeon","Lotus","Cold Storage","99 Speedmart","Other"];
+  let currency = 'RM';
+  let items = [];
+  let shoppingList = [];
+  let history = [];
+  // Currency symbols map
+  const CURR_SYMBOLS = {
+    MYR:'RM', USD:'$', GBP:'£', EUR:'€', SGD:'S$',
+    AUD:'A$', JPY:'¥', CNY:'¥', THB:'฿', IDR:'Rp',
+    SAR:'﷼', AED:'د.إ'
+  };
+  let convRates = {};
+  let convFromCode = 'MYR';
+
+  function setCurrency(c) {
+    currency = c;
+    document.getElementById('curr-display').textContent = c + ' ▾';
+    renderItems();
+  }
+
+  function toggleConverter() {
+    const panel = document.getElementById('converter-panel');
+    const open = panel.style.display === 'none';
+    panel.style.display = open ? 'block' : 'none';
+    if (open && !Object.keys(convRates).length) fetchRates();
+  }
+
+  async function fetchRates() {
+    const from = document.getElementById('conv-from').value;
+    document.getElementById('conv-rate-label').textContent = 'Fetching live rate...';
+    try {
+      const res = await fetch('https://api.frankfurter.app/latest?from=' + from);
+      const data = await res.json();
+      convRates = data.rates;
+      convRates[from] = 1;
+      convFromCode = from;
+      updateConverter();
+    } catch(e) {
+      document.getElementById('conv-rate-label').textContent = 'No internet — using offline rates';
+      // Approximate offline fallback rates from MYR
+      const offline = {MYR:1,USD:0.213,GBP:0.168,EUR:0.197,SGD:0.288,AUD:0.323,JPY:32.1,CNY:1.54,THB:7.52,IDR:3380,SAR:0.799,AED:0.782};
+      const fromRate = offline[from] || 1;
+      convRates = {};
+      for (const [k,v] of Object.entries(offline)) convRates[k] = v / fromRate;
+      convFromCode = from;
+      updateConverter();
+    }
+  }
+
+  function updateConverter() {
+    const fromSel = document.getElementById('conv-from');
+    const toSel = document.getElementById('conv-to');
+    const amount = parseFloat(document.getElementById('conv-amount').value) || 1;
+    const from = fromSel.value;
+    const to = toSel.value;
+
+    // Refetch if base currency changed
+    if (from !== convFromCode) {
+      convRates = {};
+      fetchRates();
+      return;
+    }
+
+    const rate = convRates[to];
+    if (!rate) return;
+
+    const result = (amount * rate);
+    const sym = CURR_SYMBOLS[to] || to;
+    const fromSym = CURR_SYMBOLS[from] || from;
+    document.getElementById('conv-result-label').textContent = sym + (result >= 100 ? result.toFixed(0) : result.toFixed(2));
+    document.getElementById('conv-rate-label').textContent = '1 ' + from + ' = ' + sym + rate.toFixed(4) + ' ' + to;
+
+    // Update app currency to FROM currency
+    setCurrency(CURR_SYMBOLS[from] || from);
+  }
+
+  function applyFromCurrency() {
+    const from = document.getElementById('conv-from').value;
+    const sym = CURR_SYMBOLS[from] || from;
+    setCurrency(sym);
+    document.getElementById('converter-panel').style.display = 'none';
+    document.getElementById('curr-display').textContent = sym + ' ▾';
+  }
+
+  function switchTab(t) {
+    ['compare','list','history','survey'].forEach(n => {
+      const el = document.getElementById('bnav-' + n);
+      if (el) el.classList.toggle('active', n === t);
+    });
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('tab-' + t).classList.add('active');
+    if (t === 'list') renderList();
+    if (t === 'history') renderHistory();
+    if (t === 'survey') loadSurveyGallery();
+    window.scrollTo(0, 0);
+  }
+
+  function toBase(val, unit) {
+    const m = {g:1,kg:1000,ml:1,L:1000,oz:28.3495,lb:453.592,count:1};
+    return val * (m[unit] || 1);
+  }
+
+  function calcPPU(price, qty, unit) {
+    const base = toBase(qty, unit);
+    if (!base) return null;
+    const mult = (unit === 'g' || unit === 'ml') ? 100 : 1;
+    return { val: (price / base) * mult, label: mult > 1 ? 'per 100' + unit : 'per ' + unit };
+  }
+
+  function effectivePrice(price, discount) {
+    const d = parseFloat(discount) || 0;
+    return price * (1 - d / 100);
+  }
+
+  function addItem() {
+    items.push({ name:"", price:"", qty:"", unit:"g", store:"", discount:"" });
+    renderItems();
+  }
+
+  function removeItem(i) {
+    items.splice(i, 1);
+    renderItems();
+    document.getElementById('verdict').innerHTML = '';
+  }
+
+  function updateItem(i, f, v) { items[i][f] = v; }
+
+  function renderItems() {
+    const c = document.getElementById('items-container');
+    c.innerHTML = '';
+    items.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'item-card';
+      div.innerHTML =
+        '<div class="card-header">' +
+          '<span class="card-title">' + LANG[lang].itemLabel + ' ' + (i+1) + '</span>' +
+          '<button class="remove-btn" onclick="removeItem(' + i + ')">×</button>' +
+        '</div>' +
+        '<div class="field-row">' +
+          '<div><label class="field-label">' + LANG[lang].productName.toUpperCase() + '</label>' +
+          '<input type="text" value="' + item.name + '" placeholder="e.g. Milo 1kg" oninput="updateItem(' + i + ',\'name\',this.value)"></div>' +
+          '<div><label class="field-label">' + LANG[lang].storeLabel.toUpperCase() + '</label>' +
+          '<select onchange="updateItem(' + i + ',\'store\',this.value)">' +
+          '<option value="">' + LANG[lang].storePlaceholder + '</option>' +
+          STORES.map(s => '<option value="' + s + '"' + (item.store===s?' selected':'') + '>' + s + '</option>').join('') +
+          '</select></div>' +
+        '</div>' +
+        '<div class="field-row three">' +
+          '<div><label class="field-label">' + LANG[lang].price.toUpperCase() + ' (' + currency + ')</label>' +
+          '<input type="number" min="0" step="0.01" value="' + item.price + '" placeholder="0.00" oninput="updateItem(' + i + ',\'price\',this.value)"></div>' +
+          '<div><label class="field-label">' + LANG[lang].qty.toUpperCase() + '</label>' +
+          '<input type="number" min="0" value="' + item.qty + '" placeholder="0" oninput="updateItem(' + i + ',\'qty\',this.value)"></div>' +
+          '<div><label class="field-label">' + LANG[lang].unit.toUpperCase() + '</label>' +
+          '<select onchange="updateItem(' + i + ',\'unit\',this.value)">' +
+          UNITS.map(u => '<option value="' + u + '"' + (item.unit===u?' selected':'') + '>' + u + '</option>').join('') +
+          '</select></div>' +
+        '</div>' +
+        '<div class="discount-row">' +
+          '<input type="number" min="0" max="100" value="' + item.discount + '" placeholder="0" oninput="updateItem(' + i + ',\'discount\',this.value)">' +
+          '<span class="discount-label">' + LANG[lang].promo + '</span>' +
+        '</div>';
+      c.appendChild(div);
+    });
+  }
+
+  function comparePrices() {
+    const parsed = items.map((item, i) => {
+      const rawPrice = parseFloat(item.price);
+      const qty = parseFloat(item.qty);
+      if (!rawPrice || !qty) return null;
+      const price = effectivePrice(rawPrice, item.discount);
+      const p = calcPPU(price, qty, item.unit);
+      if (!p) return null;
+      return Object.assign({}, item, { rawPrice, price, qty, ppuVal: p.val, ppuLabel: p.label, label: item.name || 'Item ' + (i+1) });
+    }).filter(Boolean);
+
+    const verdictEl = document.getElementById('verdict');
+
+    if (parsed.length < 2) {
+      verdictEl.innerHTML = '<div class="warning-box">Add at least 2 items with price and quantity to compare.</div>';
+      return;
+    }
+
+    const sorted = parsed.slice().sort((a, b) => a.ppuVal - b.ppuVal);
+    const best = sorted[0];
+    const worst = sorted[sorted.length - 1];
+    const savePct = ((worst.ppuVal - best.ppuVal) / worst.ppuVal * 100).toFixed(1);
+    const bestBase = toBase(best.qty, best.unit);
+    const worstBase = toBase(worst.qty, worst.unit);
+    const saveDollar = ((worst.price / worstBase - best.price / bestBase) * worstBase).toFixed(2);
+
+    history.unshift({
+      date: new Date().toLocaleDateString('en-MY', {day:'2-digit', month:'short', year:'numeric'}),
+      winner: best.label,
+      store: best.store || '—',
+      ppu: best.ppuVal.toFixed(4),
+      ppuLabel: best.ppuLabel,
+      currency: currency,
+      items: parsed.map(p => ({ name: p.label, store: p.store || '' }))
+    });
+    if (history.length > 30) history.pop();
+
+    const rankRows = sorted.map((p, idx) =>
+      '<div class="rank-row' + (idx === 0 ? ' best' : '') + '">' +
+        '<span class="rank-num">#' + (idx+1) + '</span>' +
+        '<div style="flex:1;"><div class="rank-name">' + p.label + '</div>' +
+        (p.store ? '<div class="rank-store">' + p.store + '</div>' : '') + '</div>' +
+        '<div><div class="rank-ppu">' + currency + p.ppuVal.toFixed(4) + ' ' + p.ppuLabel + '</div>' +
+        (p.discount ? '<div style="font-size:0.6rem;color:#2d6a4f;">-' + p.discount + '% promo</div>' : '') +
+        '</div></div>'
+    ).join('');
+
+    const safeName = best.label.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const now = new Date().toLocaleString('en-MY', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const receiptRows = sorted.map((p,idx) =>
+      '<div class="receipt-row' + (idx===0?' winner':'') + '">' +
+      '<span>' + (idx===0?'★ ':'') + p.label + (p.store?' ('+p.store+')':'') + '</span>' +
+      '<span>' + currency + p.ppuVal.toFixed(4) + ' ' + p.ppuLabel + '</span></div>'
+    ).join('');
+
+    verdictEl.innerHTML =
+      '<div class="verdict">' +
+        '<div class="verdict-label">Best Value</div>' +
+        '<div class="verdict-winner">' + best.label + '</div>' +
+        '<div class="verdict-ppu">' + currency + best.ppuVal.toFixed(4) + ' ' + best.ppuLabel + (best.store ? ' · ' + best.store : '') + '</div>' +
+        '<div class="pills">' +
+          '<span class="pill">Save ' + savePct + '%</span>' +
+          '<span class="pill">Save ' + currency + saveDollar + ' vs priciest</span>' +
+          (best.discount ? '<span class="pill">' + best.discount + '% promo applied</span>' : '') +
+        '</div>' +
+        '<button class="add-winner-btn" onclick="addWinnerToList(\'' + safeName + '\',' + best.price + ',\'' + (best.store||'') + '\')">+ Add winner to shopping list</button>' +
+      '</div>' +
+      '<div class="ranked-list">' + rankRows + '</div>';
+  }
+
+  function addWinnerToList(name, price, store) {
+    shoppingList.push({ name: name, price: parseFloat(price) || 0, store: store, checked: false });
+    switchTab('list');
+  }
+
+  function addToListManual() {
+    const inp = document.getElementById('list-input');
+    const val = inp.value.trim();
+    if (!val) return;
+    shoppingList.push({ name: val, price: 0, store: '', checked: false });
+    inp.value = '';
+    renderList();
+  }
+
+  function renderList() {
+    const c = document.getElementById('list-container');
+    if (!shoppingList.length) {
+      c.innerHTML = '<div class="empty-state">No items yet.<br>Compare prices and tap "Add winner to shopping list",<br>or type an item name above.</div>';
+      document.getElementById('list-total').style.display = 'none';
+      return;
+    }
+    c.innerHTML = shoppingList.map((item, i) =>
+      '<div class="list-item' + (item.checked ? ' checked' : '') + '">' +
+        '<button class="check-btn' + (item.checked ? ' done' : '') + '" onclick="toggleCheck(' + i + ')">' + (item.checked ? '✓' : '') + '</button>' +
+        '<div style="flex:1;"><div class="list-item-name">' + item.name + '</div>' +
+        (item.store ? '<div class="list-item-store">' + item.store + '</div>' : '') + '</div>' +
+        (item.price ? '<div class="list-item-price">' + currency + item.price.toFixed(2) + '</div>' : '') +
+        '<button class="remove-btn" onclick="removeListItem(' + i + ')">×</button>' +
+      '</div>'
+    ).join('');
+
+    const total = shoppingList.filter(i => !i.checked && i.price).reduce((s, i) => s + i.price, 0);
+    const totalEl = document.getElementById('list-total');
+    if (total > 0) {
+      totalEl.style.display = 'flex';
+      document.getElementById('list-total-val').textContent = currency + total.toFixed(2);
+    } else {
+      totalEl.style.display = 'none';
+    }
+  }
+
+  function toggleCheck(i) { shoppingList[i].checked = !shoppingList[i].checked; renderList(); }
+  function removeListItem(i) { shoppingList.splice(i, 1); renderList(); }
+  function clearChecked() { shoppingList = shoppingList.filter(i => !i.checked); renderList(); }
+
+  function renderHistory() {
+    const c = document.getElementById('history-container');
+    if (!history.length) {
+      c.innerHTML = '<div class="empty-state">No comparisons yet.<br>Compare some products to build your history.</div>';
+      return;
+    }
+    c.innerHTML = history.map(h =>
+      '<div class="history-card">' +
+        '<div class="history-date">' + h.date + '</div>' +
+        '<div style="display:flex;align-items:center;">' +
+          '<span class="history-winner">' + h.winner + '</span>' +
+          '<span class="win-badge">Winner</span>' +
+        '</div>' +
+        '<div class="history-ppu">' + h.currency + h.ppu + ' ' + h.ppuLabel + (h.store && h.store !== '—' ? ' · ' + h.store : '') + '</div>' +
+        '<div class="history-items">vs. ' + h.items.map(i => i.name + (i.store ? ' (' + i.store + ')' : '')).join(', ') + '</div>' +
+      '</div>'
+    ).join('');
+  }
+
+  function clearHistory() { history = []; renderHistory(); }
+
+
+
+  function shareReceipt() {
+    const rows = document.querySelectorAll('.receipt-row');
+    let text = '🛒 *Jimat Receipt*\n\n';
+    rows.forEach(r => {
+      const cols = r.querySelectorAll('span');
+      if (cols.length === 2) text += (r.classList.contains('winner') ? '★ BEST: ' : '• ') + cols[0].textContent + ' — ' + cols[1].textContent + '\n';
+    });
+    text += '\n_Jimat · Beli Bijak Jimat Lebih_';
+    const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.open(url, '_blank');
+  }
+
+  // ============ SURVEY FUNCTIONS ============
+  let currentPhotoData = null;
+
+  function compressImage(dataUrl, maxWidth, quality, callback) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  }
+
+  function handleSurveyPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      // Compress to max 800px wide, 60% quality — reduces ~2MB to ~80KB
+      compressImage(e.target.result, 800, 0.6, function(compressed) {
+        currentPhotoData = compressed;
+        document.getElementById('survey-preview').src = compressed;
+        document.getElementById('survey-preview').style.display = 'block';
+        document.getElementById('survey-form').style.display = 'block';
+        // Show file size saved
+        const origKB = Math.round(e.target.result.length * 0.75 / 1024);
+        const newKB = Math.round(compressed.length * 0.75 / 1024);
+        console.log('Photo compressed: ' + origKB + 'KB -> ' + newKB + 'KB');
+      });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  }
+
+  function saveSurveyPhoto() {
+    if (!currentPhotoData) return;
+    // Show saving indicator
+    const saveBtn = document.querySelector('#tab-survey .btn-primary[onclick="saveSurveyPhoto()"]');
+    if (saveBtn) { saveBtn.textContent = '⏳ Saving...'; saveBtn.disabled = true; }
+    const store = document.getElementById('survey-store').value || 'Unknown';
+    const note = document.getElementById('survey-note').value || '';
+    const date = new Date().toLocaleString('en-MY', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    const id = Date.now();
+    const entry = { id, photo: currentPhotoData, store, note, date };
+
+    // Save to IndexedDB
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onupgradeneeded = function(e) {
+      e.target.result.createObjectStore('photos', { keyPath: 'id' });
+    };
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readwrite');
+      const addReq = tx.objectStore('photos').add(entry);
+      addReq.onerror = function(err) { alert('Save error: ' + err.target.error); };
+      tx.oncomplete = function() {
+        cancelSurvey();
+        loadSurveyGallery();
+      };
+    };
+    request.onerror = function(e) { alert('DB open error: ' + e.target.error); };
+  }
+
+  function cancelSurvey() {
+    currentPhotoData = null;
+    document.getElementById('survey-form').style.display = 'none';
+    document.getElementById('survey-preview').style.display = 'none';
+    document.getElementById('survey-preview').src = '';
+    document.getElementById('survey-note').value = '';
+    document.getElementById('survey-store').value = '';
+  }
+
+  function loadSurveyGallery() {
+    const gallery = document.getElementById('survey-gallery');
+    if (!gallery) return;
+    gallery.innerHTML = '<div class="survey-empty">Loading...</div>';
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onupgradeneeded = function(e) {
+      e.target.result.createObjectStore('photos', { keyPath: 'id' });
+    };
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readonly');
+      const store = tx.objectStore('photos');
+      const all = store.getAll();
+      all.onsuccess = function() {
+        const photos = all.result.reverse();
+        if (!photos.length) {
+          gallery.innerHTML = '<div class="survey-empty">No photos yet.<br>Tap "Take Price Tag Photo" to start.</div>';
+          return;
+        }
+      };
+    };
+  }
+
+  function viewPhoto(imgEl) {
+    // Simple lightbox - show full size image
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    overlay.onclick = function(){ document.body.removeChild(overlay); };
+    const img = document.createElement('img');
+    img.src = imgEl.src;
+    img.style.cssText = 'max-width:95%;max-height:90vh;border-radius:8px;';
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+  }
+
+  function deletePhoto(id) {
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readwrite');
+      tx.objectStore('photos').delete(id);
+      tx.oncomplete = function() { loadSurveyGallery(); };
+    };
+  }
+
+  function sharePhoto(id) {
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readonly');
+      tx.objectStore('photos').get(id).onsuccess = function(ev) {
+        const p = ev.target.result;
+        if (!p) return;
+        const text = '🛒 *Jimat Price Survey*\n\n🏪 Store: ' + p.store + '\n📝 Note: ' + (p.note||'—') + '\n📅 ' + p.date + '\n\n_Jimat · Beli Bijak Jimat Lebih_';
+        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+      };
+    };
+  }
+
+  function clearSurvey() {
+    const request = indexedDB.open('JimatSurvey', 1);
+    request.onsuccess = function(e) {
+      const db = e.target.result;
+      const tx = db.transaction('photos', 'readwrite');
+      tx.objectStore('photos').clear();
+      tx.oncomplete = function() { loadSurveyGallery(); };
+    };
+  }
+
+  function resetAll() {
+    items = [];
+    shoppingList = [];
+    document.getElementById('verdict').innerHTML = '';
+    document.getElementById('list-container').innerHTML = '';
+    document.getElementById('list-total').style.display = 'none';
+    addItem();
+    addItem();
+    switchTab('compare');
+    window.scrollTo(0, 0);
+  }
+
+  // Language strings
+  const LANG = {
+    my: {
+      appName: 'Jimat 🛒',
+      tagline: 'Bandingkan harga · jimat lebih · beli bijak',
+      tag: 'Jimat — Best Buy',
+      splashSub: 'BELI BIJAK · JIMAT LEBIH',
+      compare: 'Bandingkan',
+      list: 'Senarai',
+      history: 'Sejarah',
+      addItem: '+ Tambah Item',
+      comparePrices: 'Bandingkan Harga',
+      reset: 'Tetapkan Semula',
+      bestValue: 'Nilai Terbaik',
+      store: '— kedai —',
+      storeLabel: 'Kedai',
+      storePlaceholder: '— kedai —',
+      productName: 'Nama Produk',
+      price: 'Harga',
+      qty: 'Kuantiti',
+      unit: 'Unit',
+      promo: '% promosi / diskaun',
+      addWinner: '+ Tambah ke Senarai',
+      shareWA: 'Kongsi via WhatsApp',
+      receiptTitle: '🛒 Resit Jimat',
+      receiptFooter: 'Jimat · Beli Bijak Jimat Lebih',
+      listPlaceholder: 'Taip nama item...',
+      clearChecked: 'Padam Item Ditanda',
+      clearHistory: 'Padam Sejarah',
+      noList: 'Tiada item lagi.',
+      noHistory: 'Tiada sejarah lagi.',
+      useCurrency: 'Guna sebagai mata wang saya',
+      myCurrency: 'Mata Wang Saya',
+      compareWith: 'Bandingkan Dengan',
+      amount: 'Amaun',
+      savePct: 'Jimat',
+      saveAmt: 'Jimat',
+      vsPriciest: 'vs paling mahal',
+      itemLabel: 'Item',
+      surveyTab: 'Survei',
+      surveyBtn: '📷 Ambil Foto Tag Harga',
+      surveySave: '💾 Simpan Foto',
+    },
+    en: {
+      appName: 'BestBuy 🛒',
+      tagline: 'Compare prices · save more · shop smart',
+      tag: 'Smart Shopper',
+      splashSub: 'SHOP SMART · SAVE MORE',
+      compare: 'Compare',
+      list: 'List',
+      history: 'History',
+      addItem: '+ Add Item',
+      comparePrices: 'Compare Prices',
+      reset: 'Reset',
+      bestValue: 'Best Value',
+      store: '— store —',
+      storeLabel: 'Store',
+      storePlaceholder: '— store —',
+      productName: 'Product Name',
+      price: 'Price',
+      qty: 'Qty',
+      unit: 'Unit',
+      promo: '% promo / discount',
+      addWinner: '+ Add to Shopping List',
+      shareWA: 'Share via WhatsApp',
+      receiptTitle: '🛒 BestBuy Receipt',
+      receiptFooter: 'BestBuy · Shop Smart Save More',
+      listPlaceholder: 'Type item name...',
+      clearChecked: 'Clear Checked Items',
+      clearHistory: 'Clear History',
+      noList: 'No items yet.',
+      noHistory: 'No history yet.',
+      useCurrency: 'Use as my price currency',
+      myCurrency: 'My Currency',
+      compareWith: 'Compare With',
+      amount: 'Amount',
+      savePct: 'Save',
+      saveAmt: 'Save',
+      vsPriciest: 'vs priciest',
+      itemLabel: 'Item',
+      surveyTab: 'Survey',
+      surveyBtn: '📷 Take Price Tag Photo',
+      surveySave: '💾 Save Photo',
+    }
+  };
+  let lang = 'my';
+
+  function setLang(l) {
+    lang = l;
+    document.getElementById('lang-my').classList.toggle('active', l === 'my');
+    document.getElementById('lang-en').classList.toggle('active', l === 'en');
+    const t = LANG[l];
+    // Header
+    document.querySelector('h1').textContent = t.appName;
+    document.querySelector('.tag').textContent = t.tag;
+    document.querySelector('.header p').textContent = t.tagline;
+    // Splash
+    const splashSub = document.querySelector('#splash div:last-child');
+    if (splashSub) splashSub.textContent = t.splashSub;
+    // Bottom nav
+    const bnavs = document.querySelectorAll('.bnav-btn');
+    document.querySelectorAll('.bnav-label')[0].textContent = t.compare;
+    document.querySelectorAll('.bnav-label')[1].textContent = t.list;
+    document.querySelectorAll('.bnav-label')[2].textContent = t.history;
+    if (document.querySelectorAll('.bnav-label')[3]) document.querySelectorAll('.bnav-label')[3].textContent = t.surveyTab || 'Survey';
+    // Verdict label
+    const verdictLabel = document.querySelector('.verdict-label');
+    if (verdictLabel) verdictLabel.textContent = t.bestValue;
+    // Buttons
+    const btns = document.querySelectorAll('.btn');
+    btns.forEach(b => {
+      if (b.getAttribute('onclick') === 'addItem()') b.textContent = t.addItem;
+      if (b.getAttribute('onclick') === 'comparePrices()') b.textContent = t.comparePrices;
+      if (b.getAttribute('onclick') === 'resetAll()') b.textContent = t.reset;
+      if (b.getAttribute('onclick') === 'clearChecked()') b.textContent = t.clearChecked;
+      if (b.getAttribute('onclick') === 'clearHistory()') b.textContent = t.clearHistory;
+    });
+    // Conv labels
+    const convLabels = document.querySelectorAll('.conv-col .field-label');
+    if (convLabels[0]) convLabels[0].textContent = t.myCurrency;
+    if (convLabels[1]) convLabels[1].textContent = t.compareWith;
+    if (convLabels[2]) convLabels[2].textContent = t.amount;
+    const applyBtn = document.querySelector('.conv-actions .btn');
+    if (applyBtn) applyBtn.textContent = t.useCurrency;
+    // List placeholder
+    const listInput = document.getElementById('list-input');
+    if (listInput) listInput.placeholder = t.listPlaceholder;
+    // Re-render items to update labels
+    renderItems();
+  }
+
+  addItem();
+  addItem();
+
+  // Set default language to Malay on load
+  setLang('my');
+
+  // Splash screen
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      const splash = document.getElementById('splash');
+      if (splash) { splash.style.opacity = '0'; setTimeout(function(){ splash.style.display='none'; }, 500); }
+    }, 1800);
+  });
+
+
+
+
+  // ============ PROPER SERVICE WORKER ============
+  if ('serviceWorker' in navigator) {
+    const CACHE = 'jimat-v1';
+    const swCode = `
+      const CACHE_NAME = 'jimat-v1';
+      const ASSETS = [
+        self.location.pathname.replace('/sw.js','') + '/',
+        'https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono&display=swap'
+      ];
+
+      self.addEventListener('install', e => {
+        e.waitUntil(
+          caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll(ASSETS).catch(() => {});
+          }).then(() => self.skipWaiting())
+        );
+      });
+
+      self.addEventListener('activate', e => {
+        e.waitUntil(
+          caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+          ).then(() => clients.claim())
+        );
+      });
+
+      self.addEventListener('fetch', e => {
+        if (e.request.method !== 'GET') return;
+        const url = new URL(e.request.url);
+
+        // Network first for currency API
+        if (url.hostname === 'api.frankfurter.app') {
+          e.respondWith(
+            fetch(e.request)
+              .then(res => {
+                const clone = res.clone();
+                caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+                return res;
+              })
+              .catch(() => caches.match(e.request))
+          );
+          return;
+        }
+
+        // Cache first for everything else
+        e.respondWith(
+          caches.match(e.request).then(cached => {
+            if (cached) return cached;
+            return fetch(e.request).then(res => {
+              if (!res || res.status !== 200 || res.type === 'opaque') return res;
+              const clone = res.clone();
+              caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+              return res;
+            }).catch(() => caches.match('/'));
+          })
+        );
+      });
+    `;
+
+    // Only register SW when served from http/https (not blob/file)
+    const proto = window.location.protocol;
+    if (proto === 'http:' || proto === 'https:') {
+      const blob = new Blob([swCode], {type: 'application/javascript'});
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).then(reg => {
+        if (reg.installing) {
+          caches.open(CACHE).then(cache => {
+            cache.add(window.location.href);
+          });
+        }
+        console.log('Jimat SW registered — offline mode active');
+      }).catch(err => console.log('SW note:', err.message));
+    }
+
+    // Also cache all external fonts and resources on load
+    window.addEventListener('load', function() {
+      caches.open(CACHE).then(function(cache) {
+        // Cache the page itself
+        cache.add(window.location.href).catch(() => {});
+        // Cache fonts
+        cache.add('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono&display=swap').catch(() => {});
+      });
+    });
+  }
+
+</script>
+</body>
+</html>
