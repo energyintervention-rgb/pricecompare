@@ -628,31 +628,47 @@
 
   function saveSurveyPhoto() {
     if (!currentPhotoData) return;
-    // Show saving indicator
-    const saveBtn = document.querySelector('#tab-survey .btn-primary[onclick="saveSurveyPhoto()"]');
-    if (saveBtn) { saveBtn.textContent = '⏳ Saving...'; saveBtn.disabled = true; }
-    const store = document.getElementById('survey-store').value || 'Unknown';
-    const note = document.getElementById('survey-note').value || '';
-    const date = new Date().toLocaleString('en-MY', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
-    const id = Date.now();
-    const entry = { id, photo: currentPhotoData, store, note, date };
 
-    // Save to IndexedDB
-    const request = indexedDB.open('JimatSurvey', 1);
-    request.onupgradeneeded = function(e) {
-      e.target.result.createObjectStore('photos', { keyPath: 'id' });
-    };
-    request.onsuccess = function(e) {
-      const db = e.target.result;
-      const tx = db.transaction('photos', 'readwrite');
-      const addReq = tx.objectStore('photos').add(entry);
-      addReq.onerror = function(err) { alert('Save error: ' + err.target.error); };
-      tx.oncomplete = function() {
-        cancelSurvey();
-        loadSurveyGallery();
+    const saveBtn = document.querySelector('#tab-survey .btn-primary[onclick="saveSurveyPhoto()"]');
+    function resetBtn() {
+      if (saveBtn) { saveBtn.textContent = 'Save Photo'; saveBtn.disabled = false; }
+    }
+    if (saveBtn) { saveBtn.textContent = 'Saving...'; saveBtn.disabled = true; }
+
+    compressImage(currentPhotoData, 400, 0.35, function(thumbnail) {
+      const store = document.getElementById('survey-store').value || 'Unknown';
+      const note = document.getElementById('survey-note').value || '';
+      const date = new Date().toLocaleString('en-MY', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+      const id = Date.now();
+      const entry = { id, photo: thumbnail, store, note, date };
+
+      const request = indexedDB.open('JimatSurvey', 1);
+      request.onupgradeneeded = function(e) {
+        e.target.result.createObjectStore('photos', { keyPath: 'id' });
       };
-    };
-    request.onerror = function(e) { alert('DB open error: ' + e.target.error); };
+      request.onsuccess = function(e) {
+        const db = e.target.result;
+        const tx = db.transaction('photos', 'readwrite');
+        const addReq = tx.objectStore('photos').add(entry);
+        addReq.onerror = function(err) {
+          resetBtn();
+          alert('Save error: ' + err.target.error);
+        };
+        tx.oncomplete = function() {
+          resetBtn();
+          cancelSurvey();
+          setTimeout(function() { loadSurveyGallery(); }, 150);
+        };
+        tx.onerror = function(err) {
+          resetBtn();
+          alert('Transaction error: ' + err.target.error);
+        };
+      };
+      request.onerror = function(e) {
+        resetBtn();
+        alert('DB error: ' + e.target.error);
+      };
+    });
   }
 
   function cancelSurvey() {
